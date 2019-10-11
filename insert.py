@@ -4,7 +4,7 @@ import time
 from pymongo import MongoClient
 
 
-connect = mysql.connector.MySQLConnection(host='teroria.mysql.uhserver.com', database='teroria',user='teoriadopc', password='@T20192')
+connect = mysql.connector.MySQLConnection(host='localhost', database='teoria',user='root', password='root')
 mongo = MongoClient('mongodb://localhost:27017/')
 mongodb = mongo.teoria
 collection = mongodb.usuario
@@ -33,36 +33,49 @@ if (len(str(telefone)) > 12) :
     print("O telefone informado passa dos limites propostos")
     sys.exit()
 
-ini = time.time()
-for i in range(0,1000):
-    cadastrar = ("INSERT INTO USUARIO "
-               "(idUSUARIO ,nome, email, senha, telefone) "
-                "VALUES (idUSUARIO, %s, %s, %s, %s)")
+totalsql = 0
+mongotp = 0
 
-    informacoes = (nome, email, senha, telefone)
+for j in range(0, 50):
+    ini = time.time()
+    for i in range(0,1000):
+        cadastrar = ("INSERT INTO USUARIO "
+                   "(idUSUARIO ,nome, email, senha, telefone) "
+                    "VALUES (idUSUARIO, %s, %s, %s, %s)")
 
-    cursor.execute(cadastrar, informacoes)
-    connect.commit()
+        informacoes = (nome, email, senha, telefone)
+
+        cursor.execute(cadastrar, informacoes)
+        connect.commit()
+
+    final = time.time()
+    tempo = final - ini
+    print("O tempo de gravação no SQL é: " + str(int(tempo)))
+
+
+    inimongo = time.time()
+    for i in range(0, 1000):
+        usuario = [{
+        "id": i,
+        "nome": nome,
+        "email": email,
+        "senha": senha,
+        "telefone": telefone
+        }]
+        insert = collection.insert_many(usuario)
+        insert.inserted_ids
+    finalmongo = time.time()
+    tempomongo = finalmongo - inimongo
+    print("O tempo de gravação no Mongo é: " + str(int(tempomongo)))
+
+    totalsql = totalsql + tempo
+    mongotp = mongotp + tempomongo
+
 cursor.close()
 connect.close()
-final = time.time()
-tempo = final - ini
-print("O tempo de gravação no SQL é: " + str(int(tempo)))
+print("Mongo" + str(int(mongotp)))
+print("SQL" + str(int(totalsql)))
 
 
-inimongo = time.time()
-for i in range(0, 1000):
-    usuario = [{
-    "id": i,
-    "nome": nome,
-    "email": email,
-    "senha": senha,
-    "telefone": telefone
-    }]
-    insert = collection.insert_many(usuario)
-    insert.inserted_ids
-finalmongo = time.time()
-tempomongo = finalmongo - inimongo
-print("O tempo de gravação no Mongo é: " + str(int(tempomongo)))
 
 
